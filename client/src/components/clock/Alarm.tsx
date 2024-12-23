@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, KeyboardEvent } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -60,8 +60,8 @@ export function Alarm() {
         ) {
           playAlarm();
           setActiveAlarmId(alarm.id);
-          setAlarms(alarms.map(a => 
-            a.id === alarm.id 
+          setAlarms(alarms.map(a =>
+            a.id === alarm.id
               ? { ...a, isSnoozing: false, snoozeEndTime: undefined }
               : a
           ));
@@ -83,6 +83,7 @@ export function Alarm() {
     };
     setAlarms(prev => [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
     setNewLabel("");
+    setNewTime(dayjs().format("HH:mm"));
   };
 
   const toggleAlarm = (id: string) => {
@@ -126,7 +127,7 @@ export function Alarm() {
   };
 
   const saveEdit = (id: string) => {
-    setAlarms(prev => 
+    setAlarms(prev =>
       prev.map((alarm) =>
         alarm.id === id ? { ...alarm, time: editTime, label: editLabel } : alarm
       ).sort((a, b) => a.time.localeCompare(b.time))
@@ -141,8 +142,8 @@ export function Alarm() {
     const now = dayjs();
     const snoozeEnd = now.add(alarm.snoozeDuration, 'minute');
 
-    setAlarms(alarms.map(a => 
-      a.id === id 
+    setAlarms(alarms.map(a =>
+      a.id === id
         ? {
             ...a,
             isSnoozing: true,
@@ -154,8 +155,8 @@ export function Alarm() {
   };
 
   const dismissAlarm = (id: string) => {
-    setAlarms(alarms.map(alarm => 
-      alarm.id === id 
+    setAlarms(alarms.map(alarm =>
+      alarm.id === id
         ? {
             ...alarm,
             enabled: false,
@@ -179,9 +180,15 @@ export function Alarm() {
     return dayjs(`2000-01-01 ${time}`).format("h:mm A");
   };
 
-  const filteredAlarms = showOnlyEnabled 
+  const filteredAlarms = showOnlyEnabled
     ? alarms.filter(alarm => alarm.enabled)
     : alarms;
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      addAlarm();
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -194,15 +201,15 @@ export function Alarm() {
                 {alarms.find(a => a.id === activeAlarmId)?.label || "Alarm!"}
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={() => snoozeAlarm(activeAlarmId)}
                   className="px-8 py-6 text-lg"
                 >
                   Snooze
                 </Button>
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={() => dismissAlarm(activeAlarmId)}
                   className="px-8 py-6 text-lg"
                 >
@@ -221,6 +228,8 @@ export function Alarm() {
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              onBlur={addAlarm}
               className="text-lg h-12"
             />
             <Button onClick={addAlarm} className="h-12 w-12">
@@ -231,6 +240,7 @@ export function Alarm() {
             placeholder="Label"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
+            onKeyDown={handleInputKeyDown}
             className="text-lg h-12"
           />
         </div>
