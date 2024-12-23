@@ -40,7 +40,7 @@ export function Timer() {
               const newTimeLeft = t.timeLeft - 1;
               if (newTimeLeft <= 0) {
                 clearInterval(intervalRefs.current[t.id]);
-                playAlarm();
+                playAlarm("Crystal Bells"); // Using Crystal Bells as default sound
                 return { ...t, timeLeft: 0, isRunning: false };
               }
               return { ...t, timeLeft: newTimeLeft };
@@ -58,7 +58,7 @@ export function Timer() {
   const addTimer = () => {
     const newTimer: Timer = {
       id: Math.random().toString(36).substr(2, 9),
-      label: newLabel,
+      label: newLabel || "Timer",
       targetTime: newTime,
       timeLeft: newTime,
       isRunning: false,
@@ -109,16 +109,16 @@ export function Timer() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             <Input
-              placeholder="Label"
+              placeholder="Timer label (optional)"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              className="text-lg h-12"
+              className="text-base sm:text-lg h-12"
             />
             <div className="space-y-2">
-              <div className="text-2xl font-mono text-center">
+              <div className="text-xl sm:text-2xl font-mono text-center">
                 {formatTime(newTime)}
               </div>
               <Slider
@@ -127,6 +127,7 @@ export function Timer() {
                 step={60}
                 value={[newTime]}
                 onValueChange={handleSliderChange}
+                className="touch-none"
               />
             </div>
             <Button onClick={addTimer} className="w-full">
@@ -140,27 +141,30 @@ export function Timer() {
         <div className="space-y-4">
           {timers.map((timer) => (
             <Card key={timer.id}>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <div className="text-lg font-semibold">{timer.label}</div>
+                    <div className="text-base sm:text-lg font-semibold">
+                      {timer.label}
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteTimer(timer.id)}
+                      className="touch-manipulation"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                   <div
-                    className="w-32 h-32 mx-auto rounded-full border-8 border-muted flex items-center justify-center relative"
+                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full border-8 border-muted flex items-center justify-center relative"
                     style={{
                       background: `conic-gradient(hsl(var(--primary)) ${
                         (timer.timeLeft / timer.targetTime) * 100
                       }%, transparent ${(timer.timeLeft / timer.targetTime) * 100}%)`,
                     }}
                   >
-                    <div className="text-2xl font-mono">
+                    <div className="text-xl sm:text-2xl font-mono">
                       {formatTime(timer.timeLeft)}
                     </div>
                   </div>
@@ -170,12 +174,14 @@ export function Timer() {
                       size="icon"
                       onClick={() => resetTimer(timer.id)}
                       disabled={timer.timeLeft === timer.targetTime}
+                      className="touch-manipulation"
                     >
                       <RotateCcw className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"
                       onClick={() => toggleTimer(timer.id)}
+                      className="touch-manipulation"
                     >
                       {timer.isRunning ? (
                         <Pause className="h-4 w-4" />
