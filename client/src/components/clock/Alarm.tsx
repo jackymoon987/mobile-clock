@@ -274,7 +274,7 @@ export function Alarm() {
         <Button
           variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 text-primary-foreground fixed bottom-4 right-4 sm:static shadow-lg sm:shadow-none"
+          className="h-12 w-12 rounded-full text-primary-foreground sm:static"
           onClick={() => setShowAddDialog(true)}
         >
           <Plus className="h-6 w-6" />
