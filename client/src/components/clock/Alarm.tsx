@@ -244,7 +244,7 @@ export function Alarm() {
       )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <Switch
               checked={showOnlyEnabled}
@@ -256,7 +256,7 @@ export function Alarm() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10">
+              <Button variant="outline" className="h-10 w-full sm:w-auto">
                 Clean up
               </Button>
             </DropdownMenuTrigger>
@@ -274,7 +274,7 @@ export function Alarm() {
         <Button
           variant="default"
           size="icon"
-          className="h-12 w-12 rounded-full text-primary-foreground"
+          className="rounded-full h-12 w-12 text-primary-foreground fixed bottom-4 right-4 sm:static shadow-lg sm:shadow-none"
           onClick={() => setShowAddDialog(true)}
         >
           <Plus className="h-6 w-6" />
