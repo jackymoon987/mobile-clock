@@ -306,6 +306,7 @@ export const soundEffects: SoundEffect[] = [
 
 let audioContext: AudioContext | null = null;
 let audioInitialized = false;
+let audioWorklet: AudioWorkletNode | null = null;
 
 const initializeAudioContext = async () => {
   if (!audioContext) {
@@ -313,6 +314,14 @@ const initializeAudioContext = async () => {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       audioContext = new AudioContext();
       console.log('Audio context created:', audioContext.state);
+
+      // Create a silent audio worklet to keep the audio context active
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0; // Silent
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start();
 
       if (audioContext.state === 'suspended') {
         console.log('Attempting to resume audio context...');

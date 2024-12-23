@@ -28,7 +28,7 @@ import { playAlarm } from "@/lib/audio";
 import { soundEffects } from "@/lib/soundEffects";
 import { type Alarm } from "@/lib/types";
 import dayjs from "dayjs";
-
+import { requestWakeLock, releaseWakeLock } from "@/lib/wakeLock";
 
 export function Alarm() {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
@@ -86,6 +86,21 @@ export function Alarm() {
     return () => clearInterval(checkAlarms);
   }, [alarms]);
 
+  // Add wake lock management
+  useEffect(() => {
+    const hasEnabledAlarms = alarms.some(alarm => alarm.enabled);
+
+    if (hasEnabledAlarms) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+
+    return () => {
+      releaseWakeLock();
+    };
+  }, [alarms]);
+
   const addAlarm = () => {
     const newAlarm: Alarm = {
       id: Math.random().toString(36).substr(2, 9),
@@ -101,7 +116,7 @@ export function Alarm() {
     );
     setNewLabel("");
     setNewTime(dayjs().format("HH:mm"));
-    setNewSoundEffect("Crystal Bells"); 
+    setNewSoundEffect("Crystal Bells");
   };
 
   const toggleAlarm = (id: string) => {
