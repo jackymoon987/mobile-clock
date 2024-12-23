@@ -11,9 +11,9 @@ import dayjs from "dayjs";
 interface Alarm {
   id: string;
   time: string;
+  label: string;
   enabled: boolean;
-  days: number[];
-  snoozeDuration: number; // in minutes
+  snoozeDuration: number;
   isSnoozing: boolean;
   snoozeEndTime?: string;
 }
@@ -24,10 +24,12 @@ export function Alarm() {
     return saved ? JSON.parse(saved) : [];
   });
   const [newTime, setNewTime] = useState(() => {
-    return dayjs().format("HH:mm"); // Keep 24h format for input
+    return dayjs().format("HH:mm");
   });
+  const [newLabel, setNewLabel] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
+  const [editLabel, setEditLabel] = useState("");
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
   const [selectedAlarms, setSelectedAlarms] = useState<Set<string>>(new Set());
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
@@ -43,14 +45,12 @@ export function Alarm() {
         .getMinutes()
         .toString()
         .padStart(2, "0")}`;
-      const currentDay = now.getDay();
 
       alarms.forEach((alarm) => {
         if (
           alarm.enabled &&
           !alarm.isSnoozing &&
-          alarm.time === currentTime &&
-          alarm.days.includes(currentDay)
+          alarm.time === currentTime
         ) {
           playAlarm();
           setActiveAlarmId(alarm.id);
@@ -74,16 +74,16 @@ export function Alarm() {
   }, [alarms]);
 
   const addAlarm = () => {
-    const currentDay = new Date().getDay();
     const newAlarm: Alarm = {
       id: Math.random().toString(36).substr(2, 9),
       time: newTime,
+      label: newLabel,
       enabled: true,
-      days: [currentDay],
-      snoozeDuration: 9, // Default 9 minutes like iOS
+      snoozeDuration: 9,
       isSnoozing: false
     };
     setAlarms([...alarms, newAlarm]);
+    setNewLabel("");
   };
 
   const toggleAlarm = (id: string) => {
@@ -123,12 +123,13 @@ export function Alarm() {
   const startEditing = (alarm: Alarm) => {
     setEditingId(alarm.id);
     setEditTime(alarm.time);
+    setEditLabel(alarm.label);
   };
 
   const saveEdit = (id: string) => {
     setAlarms(
       alarms.map((alarm) =>
-        alarm.id === id ? { ...alarm, time: editTime } : alarm
+        alarm.id === id ? { ...alarm, time: editTime, label: editLabel } : alarm
       )
     );
     setEditingId(null);
@@ -154,12 +155,11 @@ export function Alarm() {
   };
 
   const dismissAlarm = (id: string) => {
-    // Disable the alarm and clear any snooze state when dismissed
     setAlarms(alarms.map(alarm => 
       alarm.id === id 
         ? {
             ...alarm,
-            enabled: false, // Disable the alarm
+            enabled: false,
             isSnoozing: false,
             snoozeEndTime: undefined
           }
@@ -174,24 +174,6 @@ export function Alarm() {
         alarm.id === id ? { ...alarm, snoozeDuration: duration } : alarm
       )
     );
-  };
-
-  const toggleDay = (alarmId: string, day: number) => {
-    setAlarms(
-      alarms.map((alarm) => {
-        if (alarm.id === alarmId) {
-          const days = alarm.days.includes(day)
-            ? alarm.days.filter((d) => d !== day)
-            : [...alarm.days, day];
-          return { ...alarm, days };
-        }
-        return alarm;
-      })
-    );
-  };
-
-  const getDayLabel = (day: number) => {
-    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day];
   };
 
   const formatDisplayTime = (time: string) => {
@@ -209,19 +191,21 @@ export function Alarm() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-4">
               <Bell className="h-8 w-8 animate-bounce" />
-              <div className="text-2xl font-semibold">Alarm!</div>
+              <div className="text-2xl font-semibold">
+                {alarms.find(a => a.id === activeAlarmId)?.label || "Alarm!"}
+              </div>
               <div className="flex gap-2">
                 <Button 
                   variant="secondary" 
                   onClick={() => snoozeAlarm(activeAlarmId)}
-                  className="px-8 py-6 text-lg" // Larger touch target
+                  className="px-8 py-6 text-lg"
                 >
                   Snooze
                 </Button>
                 <Button 
                   variant="secondary" 
                   onClick={() => dismissAlarm(activeAlarmId)}
-                  className="px-8 py-6 text-lg" // Larger touch target
+                  className="px-8 py-6 text-lg"
                 >
                   Dismiss
                 </Button>
@@ -232,16 +216,24 @@ export function Alarm() {
       )}
 
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Input
+              type="time"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              className="text-lg h-12"
+            />
+            <Button onClick={addAlarm} className="h-12 w-12">
+              <Plus className="h-6 w-6" />
+            </Button>
+          </div>
           <Input
-            type="time"
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            className="text-lg h-12" // Larger input for better touch interaction
+            placeholder="Alarm label (optional)"
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            className="text-lg h-12"
           />
-          <Button onClick={addAlarm} className="h-12 w-12"> {/* Square button for better touch */}
-            <Plus className="h-6 w-6" />
-          </Button>
         </div>
 
         <div className="flex items-center justify-between">
@@ -249,7 +241,7 @@ export function Alarm() {
             <Switch
               checked={showOnlyEnabled}
               onCheckedChange={setShowOnlyEnabled}
-              className="scale-125" // Larger switch
+              className="scale-125"
             />
             <span className="text-sm">Show enabled only</span>
           </div>
@@ -276,7 +268,7 @@ export function Alarm() {
                       variant="ghost"
                       size="icon"
                       onClick={() => toggleSelectAlarm(alarm.id)}
-                      className="h-10 w-10" // Larger checkbox
+                      className="h-10 w-10"
                     >
                       {selectedAlarms.has(alarm.id) ? (
                         <CheckSquare className="h-6 w-6" />
@@ -286,47 +278,47 @@ export function Alarm() {
                     </Button>
                     <div className="space-y-2">
                       {editingId === alarm.id ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="time"
+                              value={editTime}
+                              onChange={(e) => setEditTime(e.target.value)}
+                              className="w-32 text-lg h-12"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => saveEdit(alarm.id)}
+                              className="h-12 w-12"
+                            >
+                              <Check className="h-6 w-6" />
+                            </Button>
+                          </div>
                           <Input
-                            type="time"
-                            value={editTime}
-                            onChange={(e) => setEditTime(e.target.value)}
-                            className="w-32 text-lg h-12" // Larger input
+                            placeholder="Alarm label"
+                            value={editLabel}
+                            onChange={(e) => setEditLabel(e.target.value)}
+                            className="text-lg h-12"
                           />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => saveEdit(alarm.id)}
-                            className="h-12 w-12" // Larger button
-                          >
-                            <Check className="h-6 w-6" />
-                          </Button>
                         </div>
                       ) : (
-                        <div className="text-2xl font-mono">
-                          {formatDisplayTime(alarm.time)}
-                          {alarm.isSnoozing && (
-                            <span className="text-sm ml-2 text-muted-foreground">
-                              Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
-                            </span>
+                        <div>
+                          <div className="text-2xl font-mono">
+                            {formatDisplayTime(alarm.time)}
+                            {alarm.isSnoozing && (
+                              <span className="text-sm ml-2 text-muted-foreground">
+                                Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
+                              </span>
+                            )}
+                          </div>
+                          {alarm.label && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {alarm.label}
+                            </div>
                           )}
                         </div>
                       )}
-                      <div className="flex flex-wrap gap-1">
-                        {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                          <Button
-                            key={day}
-                            variant={
-                              alarm.days.includes(day) ? "default" : "outline"
-                            }
-                            size="sm"
-                            onClick={() => toggleDay(alarm.id, day)}
-                            className="min-w-[3rem] h-10" // Larger day buttons
-                          >
-                            {getDayLabel(day)}
-                          </Button>
-                        ))}
-                      </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm text-muted-foreground">
                           Snooze duration:
@@ -337,7 +329,7 @@ export function Alarm() {
                           max="60"
                           value={alarm.snoozeDuration}
                           onChange={(e) => updateSnoozeDuration(alarm.id, parseInt(e.target.value))}
-                          className="w-20 h-10 text-lg" // Larger input
+                          className="w-20 h-10 text-lg"
                         />
                         <span className="text-sm text-muted-foreground">minutes</span>
                       </div>
@@ -347,14 +339,14 @@ export function Alarm() {
                     <Switch
                       checked={alarm.enabled}
                       onCheckedChange={() => toggleAlarm(alarm.id)}
-                      className="scale-125" // Larger switch
+                      className="scale-125"
                     />
                     {editingId !== alarm.id && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => startEditing(alarm)}
-                        className="h-10 w-10" // Larger button
+                        className="h-10 w-10"
                       >
                         <Edit2 className="h-5 w-5" />
                       </Button>
@@ -363,7 +355,7 @@ export function Alarm() {
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteAlarm(alarm.id)}
-                      className="h-10 w-10" // Larger button
+                      className="h-10 w-10"
                     >
                       <Trash2 className="h-5 w-5" />
                     </Button>
