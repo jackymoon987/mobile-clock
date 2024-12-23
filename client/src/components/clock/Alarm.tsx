@@ -17,22 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Plus, Trash2, Edit2, Check, Bell } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 import { soundEffects } from "@/lib/soundEffects";
 import { type Alarm } from "@/lib/types";
 import dayjs from "dayjs";
 
-interface Alarm {
-  id: string;
-  time: string;
-  label: string;
-  enabled: boolean;
-  soundEffect: string;
-  snoozeDuration: number;
-  isSnoozing: boolean;
-  snoozeEndTime?: string;
-}
 
 export function Alarm() {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
