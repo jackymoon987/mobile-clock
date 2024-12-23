@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Plus, Trash2, Edit2, Check, Bell, CheckSquare, Square } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 import dayjs from "dayjs";
@@ -190,6 +196,17 @@ export function Alarm() {
     }
   };
 
+  const deleteDisabledAlarms = () => {
+    setAlarms(alarms.filter(alarm => alarm.enabled));
+    setSelectedAlarms(new Set());
+  };
+
+  const deleteAllAlarms = () => {
+    setAlarms([]);
+    setSelectedAlarms(new Set());
+  };
+
+
   return (
     <div className="space-y-4">
       {activeAlarmId && (
@@ -246,14 +263,33 @@ export function Alarm() {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={showOnlyEnabled}
-              onCheckedChange={setShowOnlyEnabled}
-              className="scale-125"
-            />
-            <span className="text-sm">Show enabled only</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={showOnlyEnabled}
+                onCheckedChange={setShowOnlyEnabled}
+                className="scale-125"
+              />
+              <span className="text-sm">Show enabled only</span>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-10">
+                  Clean up
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={deleteDisabledAlarms}>
+                  Delete all disabled alarms
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={deleteAllAlarms}>
+                  Delete all alarms
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
           {selectedAlarms.size > 0 && (
             <Button
               variant="destructive"
