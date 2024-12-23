@@ -304,15 +304,37 @@ export const soundEffects: SoundEffect[] = [
   }
 ];
 
-export const playSoundEffect = (effectName: string) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const effect = soundEffects.find(e => e.name === effectName);
+let audioContext: AudioContext | null = null;
 
+export const playSoundEffect = async (effectName: string) => {
+  try {
+    // Initialize audio context on first user interaction
+    if (!audioContext) {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      audioContext = new AudioContext();
+
+      // Resume audio context if it's suspended (common on mobile)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+    }
+
+    const effect = soundEffects.find(e => e.name === effectName);
     if (effect) {
+      // For mobile browsers, we need to resume the context within the user gesture
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
       effect.generate(audioContext, 2);
     }
   } catch (error) {
     console.error('Error playing sound effect:', error);
   }
 };
+
+// Cleanup function to handle page visibility changes
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && audioContext) {
+    audioContext.suspend();
+  }
+});

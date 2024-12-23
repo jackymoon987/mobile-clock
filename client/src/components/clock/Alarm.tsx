@@ -206,28 +206,34 @@ export function Alarm() {
     playAlarm(soundName);
   };
 
+  // Handle mobile touch interactions
+  const handleTouchPreview = async (event: React.TouchEvent, soundName: string) => {
+    event.preventDefault(); // Prevent default touch behavior
+    await playAlarm(soundName);
+  };
+
   return (
     <div className="space-y-4">
       {activeAlarmId && (
         <Card className="bg-primary text-primary-foreground">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col items-center gap-4">
               <Bell className="h-8 w-8 animate-bounce" />
-              <div className="text-2xl font-semibold">
+              <div className="text-xl sm:text-2xl font-semibold text-center">
                 {alarms.find((a) => a.id === activeAlarmId)?.label || "Alarm!"}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="secondary"
                   onClick={() => snoozeAlarm(activeAlarmId)}
-                  className="px-8 py-6 text-lg"
+                  className="px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg"
                 >
                   Snooze
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => dismissAlarm(activeAlarmId)}
-                  className="px-8 py-6 text-lg"
+                  className="px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg"
                 >
                   Dismiss
                 </Button>
@@ -237,8 +243,8 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <Switch
               checked={showOnlyEnabled}
@@ -250,7 +256,7 @@ export function Alarm() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10">
+              <Button variant="outline" className="h-10 w-full sm:w-auto">
                 Clean up
               </Button>
             </DropdownMenuTrigger>
@@ -268,7 +274,7 @@ export function Alarm() {
         <Button
           variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 text-primary-foreground"
+          className="rounded-full h-12 w-12 text-primary-foreground fixed bottom-4 right-4 sm:static shadow-lg sm:shadow-none"
           onClick={() => setShowAddDialog(true)}
         >
           <Plus className="h-6 w-6" />
@@ -282,7 +288,7 @@ export function Alarm() {
               <div className="flex items-center justify-between">
                 <div
                   onClick={() => !editingId && startEditing(alarm)}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-1"
                 >
                   {editingId === alarm.id ? (
                     <div className="flex flex-col gap-2">
@@ -290,13 +296,13 @@ export function Alarm() {
                         type="time"
                         value={editTime}
                         onChange={(e) => setEditTime(e.target.value)}
-                        className="text-4xl h-12"
+                        className="text-2xl sm:text-4xl h-12"
                       />
                       <Input
                         placeholder="Label"
                         value={editLabel}
                         onChange={(e) => setEditLabel(e.target.value)}
-                        className="text-lg"
+                        className="text-base sm:text-lg"
                       />
                       <div className="flex gap-2">
                         <Select
@@ -321,6 +327,7 @@ export function Alarm() {
                           variant="outline"
                           size="icon"
                           onClick={() => previewSound(editSoundEffect)}
+                          onTouchStart={(e) => handleTouchPreview(e, editSoundEffect)}
                         >
                           <Bell className="h-4 w-4" />
                         </Button>
@@ -334,10 +341,10 @@ export function Alarm() {
                     </div>
                   ) : (
                     <div>
-                      <div className="text-4xl font-light">
+                      <div className="text-2xl sm:text-4xl font-light">
                         {formatDisplayTime(alarm.time)}
                       </div>
-                      <div className="text-base text-muted-foreground">
+                      <div className="text-sm sm:text-base text-muted-foreground">
                         {alarm.label}
                         {alarm.isSnoozing && (
                           <span className="ml-2">
@@ -350,7 +357,7 @@ export function Alarm() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-4">
                   <Switch
                     checked={alarm.enabled}
                     onCheckedChange={() => toggleAlarm(alarm.id)}
@@ -380,7 +387,7 @@ export function Alarm() {
       </ScrollArea>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Alarm</DialogTitle>
           </DialogHeader>
@@ -419,6 +426,7 @@ export function Alarm() {
                   variant="outline"
                   size="icon"
                   onClick={() => previewSound(newSoundEffect)}
+                  onTouchStart={(e) => handleTouchPreview(e, newSoundEffect)}
                 >
                   <Bell className="h-4 w-4" />
                 </Button>
