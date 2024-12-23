@@ -1,4 +1,4 @@
-import { useState, useEffect, KeyboardEvent } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Trash2, Edit2, Check, Bell, CheckSquare, Square } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, Bell } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 import dayjs from "dayjs";
 
@@ -43,7 +43,6 @@ export function Alarm() {
   const [editTime, setEditTime] = useState("");
   const [editLabel, setEditLabel] = useState("");
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
-  const [selectedAlarms, setSelectedAlarms] = useState<Set<string>>(new Set());
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
@@ -109,28 +108,6 @@ export function Alarm() {
 
   const deleteAlarm = (id: string) => {
     setAlarms(alarms.filter((alarm) => alarm.id !== id));
-    setSelectedAlarms(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  };
-
-  const deleteSelectedAlarms = () => {
-    setAlarms(alarms.filter((alarm) => !selectedAlarms.has(alarm.id)));
-    setSelectedAlarms(new Set());
-  };
-
-  const toggleSelectAlarm = (id: string) => {
-    setSelectedAlarms(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
   };
 
   const startEditing = (alarm: Alarm) => {
@@ -205,14 +182,11 @@ export function Alarm() {
 
   const deleteDisabledAlarms = () => {
     setAlarms(alarms.filter(alarm => alarm.enabled));
-    setSelectedAlarms(new Set());
   };
 
   const deleteAllAlarms = () => {
     setAlarms([]);
-    setSelectedAlarms(new Set());
   };
-
 
   return (
     <div className="space-y-4">
@@ -288,58 +262,43 @@ export function Alarm() {
           {filteredAlarms.map((alarm) => (
             <div key={alarm.id} className="bg-background p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleSelectAlarm(alarm.id)}
-                    className="h-10 w-10"
-                  >
-                    {selectedAlarms.has(alarm.id) ? (
-                      <CheckSquare className="h-6 w-6" />
-                    ) : (
-                      <Square className="h-6 w-6" />
-                    )}
-                  </Button>
-
-                  <div onClick={() => !editingId && startEditing(alarm)} className="cursor-pointer">
-                    {editingId === alarm.id ? (
-                      <div className="flex flex-col gap-2">
-                        <Input
-                          type="time"
-                          value={editTime}
-                          onChange={(e) => setEditTime(e.target.value)}
-                          className="text-4xl h-12"
-                        />
-                        <Input
-                          placeholder="Label"
-                          value={editLabel}
-                          onChange={(e) => setEditLabel(e.target.value)}
-                          className="text-lg"
-                        />
-                        <Button
-                          variant="ghost"
-                          onClick={() => saveEdit(alarm.id)}
-                        >
-                          <Check className="h-6 w-6" />
-                        </Button>
+                <div onClick={() => !editingId && startEditing(alarm)} className="cursor-pointer">
+                  {editingId === alarm.id ? (
+                    <div className="flex flex-col gap-2">
+                      <Input
+                        type="time"
+                        value={editTime}
+                        onChange={(e) => setEditTime(e.target.value)}
+                        className="text-4xl h-12"
+                      />
+                      <Input
+                        placeholder="Label"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        className="text-lg"
+                      />
+                      <Button
+                        variant="ghost"
+                        onClick={() => saveEdit(alarm.id)}
+                      >
+                        <Check className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-4xl font-light">
+                        {formatDisplayTime(alarm.time)}
                       </div>
-                    ) : (
-                      <div>
-                        <div className="text-4xl font-light">
-                          {formatDisplayTime(alarm.time)}
-                        </div>
-                        <div className="text-base text-muted-foreground">
-                          {alarm.label}
-                          {alarm.isSnoozing && (
-                            <span className="ml-2">
-                              Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
-                            </span>
-                          )}
-                        </div>
+                      <div className="text-base text-muted-foreground">
+                        {alarm.label}
+                        {alarm.isSnoozing && (
+                          <span className="ml-2">
+                            Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
