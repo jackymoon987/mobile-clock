@@ -27,21 +27,26 @@ const createOscillator = (
 const generateCrystalBells = (audioContext: AudioContext, duration: number) => {
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
   const delayBetweenNotes = 0.2;
+  const pauseBetweenLoops = 0.25; // Quarter second pause between loops
+  const sequenceDuration = (notes.length * delayBetweenNotes) + pauseBetweenLoops;
+  const loops = Math.floor(duration / sequenceDuration);
 
-  notes.forEach((freq, index) => {
-    const { oscillator, gainNode } = createOscillator(audioContext, 'sine');
-    const startTime = audioContext.currentTime + (index * delayBetweenNotes);
-    const noteDuration = 0.3;
+  for (let loop = 0; loop < loops; loop++) {
+    notes.forEach((freq, index) => {
+      const { oscillator, gainNode } = createOscillator(audioContext, 'sine');
+      const startTime = audioContext.currentTime + (loop * sequenceDuration) + (index * delayBetweenNotes);
+      const noteDuration = 0.3;
 
-    oscillator.frequency.setValueAtTime(freq, startTime);
+      oscillator.frequency.setValueAtTime(freq, startTime);
 
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
 
-    oscillator.start(startTime);
-    oscillator.stop(startTime + noteDuration);
-  });
+      oscillator.start(startTime);
+      oscillator.stop(startTime + noteDuration);
+    });
+  }
 };
 
 // Gentle Rise effect
@@ -136,23 +141,23 @@ const generateWhiteNoise = (audioContext: AudioContext, duration: number) => {
   const bufferSize = audioContext.sampleRate * duration;
   const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
   const data = buffer.getChannelData(0);
-  
+
   for (let i = 0; i < bufferSize; i++) {
     data[i] = Math.random() * 2 - 1;
   }
-  
+
   const source = audioContext.createBufferSource();
   const gainNode = audioContext.createGain();
-  
+
   source.buffer = buffer;
   source.connect(gainNode);
   gainNode.connect(audioContext.destination);
-  
+
   gainNode.gain.setValueAtTime(0, audioContext.currentTime);
   gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
   gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + duration - 0.2);
   gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
-  
+
   source.start();
   source.stop(audioContext.currentTime + duration);
 };
@@ -161,18 +166,18 @@ const generateWhiteNoise = (audioContext: AudioContext, duration: number) => {
 const generateOceanWaves = (audioContext: AudioContext, duration: number) => {
   const { oscillator, gainNode, panNode } = createOscillator(audioContext, 'sine');
   const lfoFreq = 0.2; // Wave frequency
-  
+
   for (let i = 0; i <= duration * 20; i++) {
     const t = i / 20;
     const freq = 100 + 50 * Math.sin(2 * Math.PI * lfoFreq * t);
     oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + t);
-    
+
     gainNode.gain.setValueAtTime(
       0.15 * (0.5 + 0.5 * Math.sin(2 * Math.PI * lfoFreq * t)),
       audioContext.currentTime + t
     );
   }
-  
+
   oscillator.start();
   oscillator.stop(audioContext.currentTime + duration);
 };
@@ -181,21 +186,21 @@ const generateOceanWaves = (audioContext: AudioContext, duration: number) => {
 const generateWindChimes = (audioContext: AudioContext, duration: number) => {
   const chimeFrequencies = [880, 988, 1108, 1318, 1480];
   const numChimes = 4;
-  
+
   for (let i = 0; i < numChimes; i++) {
     const { oscillator, gainNode } = createOscillator(audioContext, 'sine');
     const startTime = audioContext.currentTime + (Math.random() * duration * 0.8);
     const noteLength = 0.5 + Math.random() * 0.5;
-    
+
     oscillator.frequency.setValueAtTime(
       chimeFrequencies[Math.floor(Math.random() * chimeFrequencies.length)],
       startTime
     );
-    
+
     gainNode.gain.setValueAtTime(0, startTime);
     gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
     gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + noteLength);
-    
+
     oscillator.start(startTime);
     oscillator.stop(startTime + noteLength);
   }
@@ -204,19 +209,19 @@ const generateWindChimes = (audioContext: AudioContext, duration: number) => {
 // Rain sound effect
 const generateRainSound = (audioContext: AudioContext, duration: number) => {
   const droplets = 100;
-  
+
   for (let i = 0; i < droplets; i++) {
     const { oscillator, gainNode } = createOscillator(audioContext, 'triangle');
     const startTime = audioContext.currentTime + (Math.random() * duration);
     const dropletDuration = 0.02 + Math.random() * 0.03;
-    
+
     oscillator.frequency.setValueAtTime(2000 + Math.random() * 1000, startTime);
     oscillator.frequency.exponentialRampToValueAtTime(800, startTime + dropletDuration);
-    
+
     gainNode.gain.setValueAtTime(0, startTime);
     gainNode.gain.linearRampToValueAtTime(0.05, startTime + 0.005);
     gainNode.gain.linearRampToValueAtTime(0, startTime + dropletDuration);
-    
+
     oscillator.start(startTime);
     oscillator.stop(startTime + dropletDuration);
   }
@@ -233,7 +238,7 @@ export const soundEffects: SoundEffect[] = [
 
       for (let i = 0; i <= duration * 20; i++) {
         const t = i / 20;
-        const freq = baseFreq + (maxFreq - baseFreq) * 
+        const freq = baseFreq + (maxFreq - baseFreq) *
           (0.5 + 0.5 * Math.sin(2 * Math.PI * sweepsPerSecond * t));
         oscillator.frequency.setValueAtTime(freq, ctx.currentTime + t);
         panNode.pan.setValueAtTime(
