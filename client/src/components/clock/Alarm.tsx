@@ -101,7 +101,7 @@ export function Alarm() {
     );
     setNewLabel("");
     setNewTime(dayjs().format("HH:mm"));
-    setNewSoundEffect("Radial");
+    setNewSoundEffect("Crystal Bells"); 
   };
 
   const toggleAlarm = (id: string) => {
