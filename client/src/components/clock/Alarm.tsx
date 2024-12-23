@@ -351,6 +351,14 @@ export function Alarm() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => startEditing(alarm)}
+                    className="h-10 w-10"
+                  >
+                    <Edit2 className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => deleteAlarm(alarm.id)}
                     className="h-10 w-10"
                   >
