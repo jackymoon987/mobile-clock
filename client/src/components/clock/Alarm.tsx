@@ -11,13 +11,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Check, Bell } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
+import { soundEffects } from "@/lib/soundEffects";
+import { type Alarm } from "@/lib/types";
 import dayjs from "dayjs";
 
 interface Alarm {
@@ -25,6 +28,7 @@ interface Alarm {
   time: string;
   label: string;
   enabled: boolean;
+  soundEffect: string;
   snoozeDuration: number;
   isSnoozing: boolean;
   snoozeEndTime?: string;
@@ -39,9 +43,11 @@ export function Alarm() {
     return dayjs().format("HH:mm");
   });
   const [newLabel, setNewLabel] = useState("");
+  const [newSoundEffect, setNewSoundEffect] = useState("Radial");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
   const [editLabel, setEditLabel] = useState("");
+  const [editSoundEffect, setEditSoundEffect] = useState("");
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -64,15 +70,15 @@ export function Alarm() {
           !alarm.isSnoozing &&
           alarm.time === currentTime
         ) {
-          playAlarm();
+          playAlarm(alarm.soundEffect);
           setActiveAlarmId(alarm.id);
         } else if (
           alarm.isSnoozing &&
           alarm.snoozeEndTime === currentTime
         ) {
-          playAlarm();
+          playAlarm(alarm.soundEffect);
           setActiveAlarmId(alarm.id);
-          setAlarms(alarms.map(a =>
+          setAlarms(alarms.map((a) =>
             a.id === alarm.id
               ? { ...a, isSnoozing: false, snoozeEndTime: undefined }
               : a
@@ -90,12 +96,16 @@ export function Alarm() {
       time: newTime,
       label: newLabel,
       enabled: true,
+      soundEffect: newSoundEffect,
       snoozeDuration: 9,
-      isSnoozing: false
+      isSnoozing: false,
     };
-    setAlarms(prev => [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
+    setAlarms((prev) =>
+      [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time))
+    );
     setNewLabel("");
     setNewTime(dayjs().format("HH:mm"));
+    setNewSoundEffect("Radial");
   };
 
   const toggleAlarm = (id: string) => {
@@ -114,30 +124,38 @@ export function Alarm() {
     setEditingId(alarm.id);
     setEditTime(alarm.time);
     setEditLabel(alarm.label);
+    setEditSoundEffect(alarm.soundEffect);
   };
 
   const saveEdit = (id: string) => {
-    setAlarms(prev =>
+    setAlarms((prev) =>
       prev.map((alarm) =>
-        alarm.id === id ? { ...alarm, time: editTime, label: editLabel } : alarm
+        alarm.id === id
+          ? {
+              ...alarm,
+              time: editTime,
+              label: editLabel,
+              soundEffect: editSoundEffect,
+            }
+          : alarm
       ).sort((a, b) => a.time.localeCompare(b.time))
     );
     setEditingId(null);
   };
 
   const snoozeAlarm = (id: string) => {
-    const alarm = alarms.find(a => a.id === id);
+    const alarm = alarms.find((a) => a.id === id);
     if (!alarm) return;
 
     const now = dayjs();
-    const snoozeEnd = now.add(alarm.snoozeDuration, 'minute');
+    const snoozeEnd = now.add(alarm.snoozeDuration, "minute");
 
-    setAlarms(alarms.map(a =>
+    setAlarms(alarms.map((a) =>
       a.id === id
         ? {
             ...a,
             isSnoozing: true,
-            snoozeEndTime: snoozeEnd.format('HH:mm')
+            snoozeEndTime: snoozeEnd.format("HH:mm"),
           }
         : a
     ));
@@ -145,13 +163,13 @@ export function Alarm() {
   };
 
   const dismissAlarm = (id: string) => {
-    setAlarms(alarms.map(alarm =>
+    setAlarms(alarms.map((alarm) =>
       alarm.id === id
         ? {
             ...alarm,
             enabled: false,
             isSnoozing: false,
-            snoozeEndTime: undefined
+            snoozeEndTime: undefined,
           }
         : alarm
     ));
@@ -171,21 +189,25 @@ export function Alarm() {
   };
 
   const filteredAlarms = showOnlyEnabled
-    ? alarms.filter(alarm => alarm.enabled)
+    ? alarms.filter((alarm) => alarm.enabled)
     : alarms;
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       addAlarm();
     }
   };
 
   const deleteDisabledAlarms = () => {
-    setAlarms(alarms.filter(alarm => alarm.enabled));
+    setAlarms(alarms.filter((alarm) => alarm.enabled));
   };
 
   const deleteAllAlarms = () => {
     setAlarms([]);
+  };
+
+  const previewSound = (soundName: string) => {
+    playAlarm(soundName);
   };
 
   return (
@@ -196,7 +218,7 @@ export function Alarm() {
             <div className="flex flex-col items-center gap-4">
               <Bell className="h-8 w-8 animate-bounce" />
               <div className="text-2xl font-semibold">
-                {alarms.find(a => a.id === activeAlarmId)?.label || "Alarm!"}
+                {alarms.find((a) => a.id === activeAlarmId)?.label || "Alarm!"}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -262,7 +284,10 @@ export function Alarm() {
           {filteredAlarms.map((alarm) => (
             <div key={alarm.id} className="bg-background p-4">
               <div className="flex items-center justify-between">
-                <div onClick={() => !editingId && startEditing(alarm)} className="cursor-pointer">
+                <div
+                  onClick={() => !editingId && startEditing(alarm)}
+                  className="cursor-pointer"
+                >
                   {editingId === alarm.id ? (
                     <div className="flex flex-col gap-2">
                       <Input
@@ -277,6 +302,33 @@ export function Alarm() {
                         onChange={(e) => setEditLabel(e.target.value)}
                         className="text-lg"
                       />
+                      <div className="flex gap-2">
+                        <Select
+                          value={editSoundEffect}
+                          onValueChange={setEditSoundEffect}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {soundEffects.map((effect) => (
+                              <SelectItem
+                                key={effect.name}
+                                value={effect.name}
+                              >
+                                {effect.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => previewSound(editSoundEffect)}
+                        >
+                          <Bell className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Button
                         variant="ghost"
                         onClick={() => saveEdit(alarm.id)}
@@ -293,7 +345,8 @@ export function Alarm() {
                         {alarm.label}
                         {alarm.isSnoozing && (
                           <span className="ml-2">
-                            Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
+                            Snoozing until{" "}
+                            {formatDisplayTime(alarm.snoozeEndTime!)}
                           </span>
                         )}
                       </div>
@@ -340,21 +393,48 @@ export function Alarm() {
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              onKeyDown={handleInputKeyDown}
               className="text-lg h-12"
             />
             <Input
               placeholder="Label"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              onKeyDown={handleInputKeyDown}
               className="text-lg h-12"
             />
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">Sound</label>
+              <div className="flex gap-2">
+                <Select
+                  value={newSoundEffect}
+                  onValueChange={setNewSoundEffect}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {soundEffects.map((effect) => (
+                      <SelectItem key={effect.name} value={effect.name}>
+                        {effect.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => previewSound(newSoundEffect)}
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <div className="flex justify-end">
-              <Button onClick={() => {
-                addAlarm();
-                setShowAddDialog(false);
-              }}>
+              <Button
+                onClick={() => {
+                  addAlarm();
+                  setShowAddDialog(false);
+                }}
+              >
                 Add Alarm
               </Button>
             </div>
