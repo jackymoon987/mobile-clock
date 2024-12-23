@@ -28,7 +28,7 @@ import { playAlarm } from "@/lib/audio";
 import { soundEffects } from "@/lib/soundEffects";
 import { type Alarm } from "@/lib/types";
 import dayjs from "dayjs";
-import { requestWakeLock, releaseWakeLock } from "@/lib/wakeLock";
+
 
 export function Alarm() {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
@@ -86,21 +86,6 @@ export function Alarm() {
     return () => clearInterval(checkAlarms);
   }, [alarms]);
 
-  // Add wake lock management
-  useEffect(() => {
-    const hasEnabledAlarms = alarms.some(alarm => alarm.enabled);
-
-    if (hasEnabledAlarms) {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
-    }
-
-    return () => {
-      releaseWakeLock();
-    };
-  }, [alarms]);
-
   const addAlarm = () => {
     const newAlarm: Alarm = {
       id: Math.random().toString(36).substr(2, 9),
@@ -116,7 +101,7 @@ export function Alarm() {
     );
     setNewLabel("");
     setNewTime(dayjs().format("HH:mm"));
-    setNewSoundEffect("Crystal Bells");
+    setNewSoundEffect("Crystal Bells"); 
   };
 
   const toggleAlarm = (id: string) => {
@@ -271,29 +256,31 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={showOnlyEnabled}
-            onCheckedChange={setShowOnlyEnabled}
-            className="scale-125"
-          />
-          <span className="text-sm">Show enabled only</span>
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={showOnlyEnabled}
+              onCheckedChange={setShowOnlyEnabled}
+              className="scale-125"
+            />
+            <span className="text-sm">Show enabled only</span>
+          </div>
 
-        <div className="flex items-center gap-2">
           <Button
             variant="default"
             size="icon"
-            className="rounded-full h-10 w-10 text-primary-foreground"
+            className="rounded-full h-10 w-10 text-primary-foreground sm:hidden"
             onClick={() => setShowAddDialog(true)}
           >
             <Plus className="h-5 w-5" />
           </Button>
+        </div>
 
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10">
+              <Button variant="outline" className="h-10 w-full sm:w-auto">
                 Clean up
               </Button>
             </DropdownMenuTrigger>
@@ -306,6 +293,15 @@ export function Alarm() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button
+            variant="default"
+            size="icon"
+            className="rounded-full h-10 w-10 text-primary-foreground hidden sm:flex"
+            onClick={() => setShowAddDialog(true)}
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
