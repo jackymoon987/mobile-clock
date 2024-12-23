@@ -27,7 +27,7 @@ const createOscillator = (
 const generateCrystalBells = (audioContext: AudioContext, duration: number) => {
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
   const delayBetweenNotes = 0.2;
-  const pauseBetweenLoops = 0.25; // Quarter second pause between loops
+  const pauseBetweenLoops = 0.5; // Half second pause between loops
   const sequenceDuration = (notes.length * delayBetweenNotes) + pauseBetweenLoops;
   const loops = Math.floor(duration / sequenceDuration);
 
