@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 
@@ -11,6 +11,10 @@ export function Timer() {
   const [targetTime, setTargetTime] = useState(300); // 5 minutes default
   const [timeLeft, setTimeLeft] = useState(targetTime);
   const [isRunning, setIsRunning] = useState(false);
+  const [label, setLabel] = useState("");
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(5);
+  const [seconds, setSeconds] = useState(0);
   const intervalRef = useRef<number>();
 
   useEffect(() => {
@@ -30,78 +34,127 @@ export function Timer() {
     return () => clearInterval(intervalRef.current);
   }, [isRunning, timeLeft]);
 
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
+  const startTimer = () => {
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    setTargetTime(totalSeconds);
+    setTimeLeft(totalSeconds);
+    setIsRunning(true);
   };
 
-  const resetTimer = () => {
+  const cancelTimer = () => {
     setIsRunning(false);
     setTimeLeft(targetTime);
     clearInterval(intervalRef.current);
   };
 
-  const handleSliderChange = (value: number[]) => {
-    const newTime = value[0];
-    setTargetTime(newTime);
-    if (!isRunning) {
-      setTimeLeft(newTime);
-    }
+  const formatNumber = (num: number) => {
+    return num.toString().padStart(2, "0");
   };
 
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours ? hours + ":" : ""}${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h ? h + ":" : ""}${formatNumber(m)}:${formatNumber(s)}`;
   };
 
-  const progress = (timeLeft / targetTime) * 100;
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-8">
+  const renderWheel = (value: number, setValue: (n: number) => void, max: number) => (
+    <div className="relative h-40 overflow-hidden">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-2xl font-light">
+        {Array.from({ length: max + 1 }).map((_, i) => (
           <div
-            className="w-48 h-48 mx-auto rounded-full border-8 border-muted flex items-center justify-center relative"
-            style={{
-              background: `conic-gradient(hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
-            }}
+            key={i}
+            className={`h-12 flex items-center transition-transform ${
+              i === value ? "text-primary scale-110" : "text-muted-foreground"
+            }`}
+            onClick={() => setValue(i)}
           >
-            <div className="text-4xl font-mono">{formatTime(timeLeft)}</div>
+            {formatNumber(i)}
           </div>
+        ))}
+      </div>
+    </div>
+  );
 
-          <div className="space-y-6">
-            <Slider
-              min={60}
-              max={MAX_TIME}
-              step={60}
-              value={[targetTime]}
-              onValueChange={handleSliderChange}
-              disabled={isRunning}
-            />
+  if (isRunning) {
+    const progress = (timeLeft / targetTime) * 100;
 
-            <div className="flex justify-center gap-4">
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-8">
+            <div
+              className="w-48 h-48 mx-auto rounded-full border-8 border-muted flex items-center justify-center relative"
+              style={{
+                background: `conic-gradient(hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
+              }}
+            >
+              <div className="text-4xl font-mono">{formatTime(timeLeft)}</div>
+            </div>
+
+            <div className="flex justify-center">
               <Button
-                variant="outline"
-                size="icon"
-                onClick={resetTimer}
-                disabled={timeLeft === targetTime}
+                size="lg"
+                className="w-32 h-16 rounded-full"
+                onClick={cancelTimer}
               >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button size="icon" onClick={toggleTimer}>
-                {isRunning ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
+                Cancel
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-around text-4xl font-light">
+        <div className="w-1/3">
+          {renderWheel(hours, setHours, 23)}
+          <div className="text-center text-sm text-muted-foreground">hours</div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="w-1/3">
+          {renderWheel(minutes, setMinutes, 59)}
+          <div className="text-center text-sm text-muted-foreground">min</div>
+        </div>
+        <div className="w-1/3">
+          {renderWheel(seconds, setSeconds, 59)}
+          <div className="text-center text-sm text-muted-foreground">sec</div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Card>
+          <CardContent className="p-4">
+            <Input
+              placeholder="Label"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="bg-transparent border-none text-lg placeholder:text-muted-foreground"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center">
+              <span className="text-lg">When Timer Ends</span>
+              <span className="text-lg text-primary">Radar</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-center">
+        <Button
+          size="lg"
+          className="w-32 h-16 rounded-full bg-[#30D158] hover:bg-[#30D158]/90"
+          onClick={startTimer}
+        >
+          Start
+        </Button>
+      </div>
+    </div>
   );
 }
