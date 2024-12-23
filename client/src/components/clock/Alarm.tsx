@@ -154,6 +154,17 @@ export function Alarm() {
   };
 
   const dismissAlarm = (id: string) => {
+    // Disable the alarm and clear any snooze state when dismissed
+    setAlarms(alarms.map(alarm => 
+      alarm.id === id 
+        ? {
+            ...alarm,
+            enabled: false, // Disable the alarm
+            isSnoozing: false,
+            snoozeEndTime: undefined
+          }
+        : alarm
+    ));
     setActiveAlarmId(null);
   };
 
