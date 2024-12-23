@@ -27,7 +27,7 @@ const createOscillator = (
 const generateCrystalBells = (audioContext: AudioContext, duration: number) => {
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
   const delayBetweenNotes = 0.2;
-  const pauseBetweenLoops = 1.0; // One second pause between loops
+  const pauseBetweenLoops = 1.0; // One full second pause between loops
   const sequenceDuration = (notes.length * delayBetweenNotes) + pauseBetweenLoops;
   const loops = Math.floor(duration / sequenceDuration);
 
@@ -39,8 +39,9 @@ const generateCrystalBells = (audioContext: AudioContext, duration: number) => {
 
       oscillator.frequency.setValueAtTime(freq, startTime);
 
+      // Increase volume slightly for better mobile playback
       gainNode.gain.setValueAtTime(0, startTime);
-      gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+      gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
 
       oscillator.start(startTime);
@@ -320,6 +321,15 @@ const initializeAudioContext = async () => {
         console.log('Audio context resumed:', audioContext.state);
       }
 
+      // Add a silent oscillator to initialize audio on mobile
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0;
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.001);
+
       audioInitialized = true;
     } catch (error) {
       console.error('Failed to initialize audio context:', error);
@@ -354,17 +364,20 @@ export const playSoundEffect = async (effectName: string) => {
   }
 };
 
-// Update touch handlers in components to use async/await
+// Add touchstart event listener to initialize audio
 document.addEventListener('touchstart', async () => {
   try {
     if (!audioInitialized) {
       console.log('Initializing audio on first touch...');
-      await initializeAudioContext();
+      const ctx = await initializeAudioContext();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
     }
   } catch (error) {
     console.error('Error initializing audio on touch:', error);
   }
-});
+}, { once: true }); // Only need to initialize once
 
 // Handle visibility changes
 document.addEventListener('visibilitychange', () => {

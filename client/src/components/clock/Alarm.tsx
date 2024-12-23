@@ -39,7 +39,7 @@ export function Alarm() {
     return dayjs().format("HH:mm");
   });
   const [newLabel, setNewLabel] = useState("");
-  const [newSoundEffect, setNewSoundEffect] = useState("Crystal Bells");
+  const [newSoundEffect, setNewSoundEffect] = useState("Crystal Bells"); 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
   const [editLabel, setEditLabel] = useState("");
@@ -256,53 +256,24 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <div className="flex items-center justify-between w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={showOnlyEnabled}
-              onCheckedChange={setShowOnlyEnabled}
-              className="scale-125"
-            />
-            <span className="text-sm">Show enabled only</span>
-          </div>
-
-          <Button
-            variant="default"
-            size="icon"
-            className="rounded-full h-10 w-10 text-primary-foreground sm:hidden"
-            onClick={() => setShowAddDialog(true)}
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
-        </div>
-
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10 w-full sm:w-auto">
-                Clean up
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={deleteDisabledAlarms}>
-                Delete all disabled alarms
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={deleteAllAlarms}>
-                Delete all alarms
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="default"
-            size="icon"
-            className="rounded-full h-10 w-10 text-primary-foreground hidden sm:flex"
-            onClick={() => setShowAddDialog(true)}
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
+          <Switch
+            checked={showOnlyEnabled}
+            onCheckedChange={setShowOnlyEnabled}
+            className="scale-125"
+          />
+          <span className="text-sm">Show enabled only</span>
         </div>
+
+        <Button
+          variant="default"
+          size="icon"
+          className="rounded-full h-10 w-10 text-primary-foreground"
+          onClick={() => setShowAddDialog(true)}
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
       </div>
 
       <ScrollArea className="h-[calc(100vh-12rem)]">

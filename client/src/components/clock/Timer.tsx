@@ -27,10 +27,6 @@ export function Timer() {
   const intervalRefs = useRef<{ [key: string]: number }>({});
 
   useEffect(() => {
-    localStorage.setItem("timers", JSON.stringify(timers));
-  }, [timers]);
-
-  useEffect(() => {
     timers.forEach((timer) => {
       if (timer.isRunning && timer.timeLeft > 0) {
         intervalRefs.current[timer.id] = window.setInterval(() => {
@@ -40,7 +36,7 @@ export function Timer() {
               const newTimeLeft = t.timeLeft - 1;
               if (newTimeLeft <= 0) {
                 clearInterval(intervalRefs.current[t.id]);
-                playAlarm("Crystal Bells"); // Using Crystal Bells as default sound
+                playAlarm("Crystal Bells"); // Always use Crystal Bells
                 return { ...t, timeLeft: 0, isRunning: false };
               }
               return { ...t, timeLeft: newTimeLeft };
