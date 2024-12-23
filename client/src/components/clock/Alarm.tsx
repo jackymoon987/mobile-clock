@@ -5,6 +5,12 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -39,6 +45,7 @@ export function Alarm() {
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
   const [selectedAlarms, setSelectedAlarms] = useState<Set<string>>(new Set());
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("alarms", JSON.stringify(alarms));
@@ -238,179 +245,155 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={showOnlyEnabled}
+              onCheckedChange={setShowOnlyEnabled}
+              className="scale-125"
+            />
+            <span className="text-sm">Show enabled only</span>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-10">
+                Clean up
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={deleteDisabledAlarms}>
+                Delete all disabled alarms
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deleteAllAlarms}>
+                Delete all alarms
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <Button
+          variant="default"
+          size="icon"
+          className="rounded-full h-12 w-12 text-primary-foreground"
+          onClick={() => setShowAddDialog(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
+
+      <ScrollArea className="h-[calc(100vh-12rem)]">
+        <div className="space-y-[1px] bg-border">
+          {filteredAlarms.map((alarm) => (
+            <div key={alarm.id} className="bg-background p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleSelectAlarm(alarm.id)}
+                    className="h-10 w-10"
+                  >
+                    {selectedAlarms.has(alarm.id) ? (
+                      <CheckSquare className="h-6 w-6" />
+                    ) : (
+                      <Square className="h-6 w-6" />
+                    )}
+                  </Button>
+
+                  <div onClick={() => !editingId && startEditing(alarm)} className="cursor-pointer">
+                    {editingId === alarm.id ? (
+                      <div className="flex flex-col gap-2">
+                        <Input
+                          type="time"
+                          value={editTime}
+                          onChange={(e) => setEditTime(e.target.value)}
+                          className="text-4xl h-12"
+                        />
+                        <Input
+                          placeholder="Label"
+                          value={editLabel}
+                          onChange={(e) => setEditLabel(e.target.value)}
+                          className="text-lg"
+                        />
+                        <Button
+                          variant="ghost"
+                          onClick={() => saveEdit(alarm.id)}
+                        >
+                          <Check className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-4xl font-light">
+                          {formatDisplayTime(alarm.time)}
+                        </div>
+                        <div className="text-base text-muted-foreground">
+                          {alarm.label}
+                          {alarm.isSnoozing && (
+                            <span className="ml-2">
+                              Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={alarm.enabled}
+                    onCheckedChange={() => toggleAlarm(alarm.id)}
+                    className="scale-125"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteAlarm(alarm.id)}
+                    className="h-10 w-10"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Alarm</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
             <Input
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              onBlur={addAlarm}
               className="text-lg h-12"
             />
-            <Button onClick={addAlarm} className="h-12 w-12">
-              <Plus className="h-6 w-6" />
-            </Button>
-          </div>
-          <Input
-            placeholder="Label"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            onKeyDown={handleInputKeyDown}
-            className="text-lg h-12"
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={showOnlyEnabled}
-                onCheckedChange={setShowOnlyEnabled}
-                className="scale-125"
-              />
-              <span className="text-sm">Show enabled only</span>
+            <Input
+              placeholder="Label"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              className="text-lg h-12"
+            />
+            <div className="flex justify-end">
+              <Button onClick={() => {
+                addAlarm();
+                setShowAddDialog(false);
+              }}>
+                Add Alarm
+              </Button>
             </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-10">
-                  Clean up
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={deleteDisabledAlarms}>
-                  Delete all disabled alarms
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={deleteAllAlarms}>
-                  Delete all alarms
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
-
-          {selectedAlarms.size > 0 && (
-            <Button
-              variant="destructive"
-              onClick={deleteSelectedAlarms}
-              className="ml-auto"
-            >
-              Delete Selected ({selectedAlarms.size})
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <ScrollArea className="h-[calc(100vh-12rem)]">
-        <div className="space-y-4">
-          {filteredAlarms.map((alarm) => (
-            <Card key={alarm.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleSelectAlarm(alarm.id)}
-                      className="h-10 w-10"
-                    >
-                      {selectedAlarms.has(alarm.id) ? (
-                        <CheckSquare className="h-6 w-6" />
-                      ) : (
-                        <Square className="h-6 w-6" />
-                      )}
-                    </Button>
-                    <div className="space-y-2">
-                      {editingId === alarm.id ? (
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="time"
-                              value={editTime}
-                              onChange={(e) => setEditTime(e.target.value)}
-                              className="w-32 text-lg h-12"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => saveEdit(alarm.id)}
-                              className="h-12 w-12"
-                            >
-                              <Check className="h-6 w-6" />
-                            </Button>
-                          </div>
-                          <Input
-                            placeholder="Label"
-                            value={editLabel}
-                            onChange={(e) => setEditLabel(e.target.value)}
-                            className="text-lg h-12"
-                          />
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="text-2xl font-mono">
-                            {formatDisplayTime(alarm.time)}
-                            {alarm.isSnoozing && (
-                              <span className="text-sm ml-2 text-muted-foreground">
-                                Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
-                              </span>
-                            )}
-                          </div>
-                          {alarm.label && (
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {alarm.label}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm text-muted-foreground">
-                          Snooze duration:
-                        </span>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="60"
-                          value={alarm.snoozeDuration}
-                          onChange={(e) => updateSnoozeDuration(alarm.id, parseInt(e.target.value))}
-                          className="w-20 h-10 text-lg"
-                        />
-                        <span className="text-sm text-muted-foreground">minutes</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Switch
-                      checked={alarm.enabled}
-                      onCheckedChange={() => toggleAlarm(alarm.id)}
-                      className="scale-125"
-                    />
-                    {editingId !== alarm.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => startEditing(alarm)}
-                        className="h-10 w-10"
-                      >
-                        <Edit2 className="h-5 w-5" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteAlarm(alarm.id)}
-                      className="h-10 w-10"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
