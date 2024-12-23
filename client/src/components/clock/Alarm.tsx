@@ -271,31 +271,29 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <div className="flex items-center justify-between w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={showOnlyEnabled}
-              onCheckedChange={setShowOnlyEnabled}
-              className="scale-125"
-            />
-            <span className="text-sm">Show enabled only</span>
-          </div>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={showOnlyEnabled}
+            onCheckedChange={setShowOnlyEnabled}
+            className="scale-125"
+          />
+          <span className="text-sm">Show enabled only</span>
+        </div>
 
+        <div className="flex items-center gap-2">
           <Button
             variant="default"
             size="icon"
-            className="rounded-full h-10 w-10 text-primary-foreground sm:hidden"
+            className="rounded-full h-10 w-10 text-primary-foreground"
             onClick={() => setShowAddDialog(true)}
           >
             <Plus className="h-5 w-5" />
           </Button>
-        </div>
 
-        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10 w-full sm:w-auto">
+              <Button variant="outline" className="h-10">
                 Clean up
               </Button>
             </DropdownMenuTrigger>
@@ -308,15 +306,6 @@ export function Alarm() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button
-            variant="default"
-            size="icon"
-            className="rounded-full h-10 w-10 text-primary-foreground hidden sm:flex"
-            onClick={() => setShowAddDialog(true)}
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
         </div>
       </div>
 

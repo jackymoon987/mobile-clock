@@ -10,7 +10,19 @@ export async function requestWakeLock() {
       wakeLock.addEventListener('release', () => {
         console.log('Wake lock released');
         wakeLock = null;
+        // Automatically try to reacquire wake lock
+        requestWakeLock().catch(console.error);
       });
+
+      // Add periodic wake lock refresh
+      setInterval(() => {
+        if (wakeLock) {
+          wakeLock.release().then(() => {
+            console.log('Refreshing wake lock...');
+            requestWakeLock().catch(console.error);
+          });
+        }
+      }, 50 * 60 * 1000); // Refresh every 50 minutes
     } else {
       console.log('Wake lock API not supported');
     }
@@ -31,9 +43,23 @@ export async function releaseWakeLock() {
   }
 }
 
-// Handle visibility change
+// Handle page visibility change
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+// Handle device orientation change
+window.addEventListener('orientationchange', async () => {
+  if (wakeLock !== null) {
+    await requestWakeLock();
+  }
+});
+
+// Handle resume from sleep
+window.addEventListener('focus', async () => {
+  if (wakeLock === null) {
     await requestWakeLock();
   }
 });
