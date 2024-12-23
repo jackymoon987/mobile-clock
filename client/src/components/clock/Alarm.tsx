@@ -39,7 +39,7 @@ export function Alarm() {
     return dayjs().format("HH:mm");
   });
   const [newLabel, setNewLabel] = useState("");
-  const [newSoundEffect, setNewSoundEffect] = useState("Radial");
+  const [newSoundEffect, setNewSoundEffect] = useState("Crystal Bells");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
   const [editLabel, setEditLabel] = useState("");
