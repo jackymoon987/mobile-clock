@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Check } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 
 interface Alarm {
@@ -20,6 +20,8 @@ export function Alarm() {
     return saved ? JSON.parse(saved) : [];
   });
   const [newTime, setNewTime] = useState("07:00");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTime, setEditTime] = useState("");
 
   useEffect(() => {
     localStorage.setItem("alarms", JSON.stringify(alarms));
@@ -70,6 +72,20 @@ export function Alarm() {
     setAlarms(alarms.filter((alarm) => alarm.id !== id));
   };
 
+  const startEditing = (alarm: Alarm) => {
+    setEditingId(alarm.id);
+    setEditTime(alarm.time);
+  };
+
+  const saveEdit = (id: string) => {
+    setAlarms(
+      alarms.map((alarm) =>
+        alarm.id === id ? { ...alarm, time: editTime } : alarm
+      )
+    );
+    setEditingId(null);
+  };
+
   const toggleDay = (alarmId: string, day: number) => {
     setAlarms(
       alarms.map((alarm) => {
@@ -108,7 +124,25 @@ export function Alarm() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
-                    <div className="text-2xl font-mono">{alarm.time}</div>
+                    {editingId === alarm.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="time"
+                          value={editTime}
+                          onChange={(e) => setEditTime(e.target.value)}
+                          className="w-32"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => saveEdit(alarm.id)}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-2xl font-mono">{alarm.time}</div>
+                    )}
                     <div className="flex gap-1">
                       {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                         <Button
@@ -129,6 +163,15 @@ export function Alarm() {
                       checked={alarm.enabled}
                       onCheckedChange={() => toggleAlarm(alarm.id)}
                     />
+                    {editingId !== alarm.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEditing(alarm)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
