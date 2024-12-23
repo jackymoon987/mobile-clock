@@ -203,12 +203,14 @@ export function Alarm() {
                 <Button 
                   variant="secondary" 
                   onClick={() => snoozeAlarm(activeAlarmId)}
+                  className="px-8 py-6 text-lg" // Larger touch target
                 >
                   Snooze
                 </Button>
                 <Button 
                   variant="secondary" 
                   onClick={() => dismissAlarm(activeAlarmId)}
+                  className="px-8 py-6 text-lg" // Larger touch target
                 >
                   Dismiss
                 </Button>
@@ -224,9 +226,10 @@ export function Alarm() {
             type="time"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
+            className="text-lg h-12" // Larger input for better touch interaction
           />
-          <Button onClick={addAlarm}>
-            <Plus className="h-4 w-4" />
+          <Button onClick={addAlarm} className="h-12 w-12"> {/* Square button for better touch */}
+            <Plus className="h-6 w-6" />
           </Button>
         </div>
 
@@ -235,6 +238,7 @@ export function Alarm() {
             <Switch
               checked={showOnlyEnabled}
               onCheckedChange={setShowOnlyEnabled}
+              className="scale-125" // Larger switch
             />
             <span className="text-sm">Show enabled only</span>
           </div>
@@ -261,11 +265,12 @@ export function Alarm() {
                       variant="ghost"
                       size="icon"
                       onClick={() => toggleSelectAlarm(alarm.id)}
+                      className="h-10 w-10" // Larger checkbox
                     >
                       {selectedAlarms.has(alarm.id) ? (
-                        <CheckSquare className="h-4 w-4" />
+                        <CheckSquare className="h-6 w-6" />
                       ) : (
-                        <Square className="h-4 w-4" />
+                        <Square className="h-6 w-6" />
                       )}
                     </Button>
                     <div className="space-y-2">
@@ -275,14 +280,15 @@ export function Alarm() {
                             type="time"
                             value={editTime}
                             onChange={(e) => setEditTime(e.target.value)}
-                            className="w-32"
+                            className="w-32 text-lg h-12" // Larger input
                           />
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => saveEdit(alarm.id)}
+                            className="h-12 w-12" // Larger button
                           >
-                            <Check className="h-4 w-4" />
+                            <Check className="h-6 w-6" />
                           </Button>
                         </div>
                       ) : (
@@ -295,7 +301,7 @@ export function Alarm() {
                           )}
                         </div>
                       )}
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                           <Button
                             key={day}
@@ -304,12 +310,13 @@ export function Alarm() {
                             }
                             size="sm"
                             onClick={() => toggleDay(alarm.id, day)}
+                            className="min-w-[3rem] h-10" // Larger day buttons
                           >
                             {getDayLabel(day)}
                           </Button>
                         ))}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm text-muted-foreground">
                           Snooze duration:
                         </span>
@@ -319,7 +326,7 @@ export function Alarm() {
                           max="60"
                           value={alarm.snoozeDuration}
                           onChange={(e) => updateSnoozeDuration(alarm.id, parseInt(e.target.value))}
-                          className="w-20"
+                          className="w-20 h-10 text-lg" // Larger input
                         />
                         <span className="text-sm text-muted-foreground">minutes</span>
                       </div>
@@ -329,22 +336,25 @@ export function Alarm() {
                     <Switch
                       checked={alarm.enabled}
                       onCheckedChange={() => toggleAlarm(alarm.id)}
+                      className="scale-125" // Larger switch
                     />
                     {editingId !== alarm.id && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => startEditing(alarm)}
+                        className="h-10 w-10" // Larger button
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className="h-5 w-5" />
                       </Button>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteAlarm(alarm.id)}
+                      className="h-10 w-10" // Larger button
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
