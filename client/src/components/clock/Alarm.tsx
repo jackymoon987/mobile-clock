@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Check, Bell } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, Bell, CheckSquare, Square } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
 import dayjs from "dayjs";
 
@@ -29,6 +29,8 @@ export function Alarm() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
+  const [selectedAlarms, setSelectedAlarms] = useState<Set<string>>(new Set());
+  const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("alarms", JSON.stringify(alarms));
@@ -94,6 +96,28 @@ export function Alarm() {
 
   const deleteAlarm = (id: string) => {
     setAlarms(alarms.filter((alarm) => alarm.id !== id));
+    setSelectedAlarms(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const deleteSelectedAlarms = () => {
+    setAlarms(alarms.filter((alarm) => !selectedAlarms.has(alarm.id)));
+    setSelectedAlarms(new Set());
+  };
+
+  const toggleSelectAlarm = (id: string) => {
+    setSelectedAlarms(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const startEditing = (alarm: Alarm) => {
@@ -163,6 +187,10 @@ export function Alarm() {
     return dayjs(`2000-01-01 ${time}`).format("h:mm A");
   };
 
+  const filteredAlarms = showOnlyEnabled 
+    ? alarms.filter(alarm => alarm.enabled)
+    : alarms;
+
   return (
     <div className="space-y-4">
       {activeAlarmId && (
@@ -190,77 +218,111 @@ export function Alarm() {
         </Card>
       )}
 
-      <div className="flex gap-2">
-        <Input
-          type="time"
-          value={newTime}
-          onChange={(e) => setNewTime(e.target.value)}
-        />
-        <Button onClick={addAlarm}>
-          <Plus className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-2">
+          <Input
+            type="time"
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+          />
+          <Button onClick={addAlarm}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={showOnlyEnabled}
+              onCheckedChange={setShowOnlyEnabled}
+            />
+            <span className="text-sm">Show enabled only</span>
+          </div>
+          {selectedAlarms.size > 0 && (
+            <Button
+              variant="destructive"
+              onClick={deleteSelectedAlarms}
+              className="ml-auto"
+            >
+              Delete Selected ({selectedAlarms.size})
+            </Button>
+          )}
+        </div>
       </div>
 
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="space-y-4">
-          {alarms.map((alarm) => (
+          {filteredAlarms.map((alarm) => (
             <Card key={alarm.id}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    {editingId === alarm.id ? (
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleSelectAlarm(alarm.id)}
+                    >
+                      {selectedAlarms.has(alarm.id) ? (
+                        <CheckSquare className="h-4 w-4" />
+                      ) : (
+                        <Square className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <div className="space-y-2">
+                      {editingId === alarm.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            value={editTime}
+                            onChange={(e) => setEditTime(e.target.value)}
+                            className="w-32"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => saveEdit(alarm.id)}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-2xl font-mono">
+                          {formatDisplayTime(alarm.time)}
+                          {alarm.isSnoozing && (
+                            <span className="text-sm ml-2 text-muted-foreground">
+                              Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex gap-1">
+                        {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                          <Button
+                            key={day}
+                            variant={
+                              alarm.days.includes(day) ? "default" : "outline"
+                            }
+                            size="sm"
+                            onClick={() => toggleDay(alarm.id, day)}
+                          >
+                            {getDayLabel(day)}
+                          </Button>
+                        ))}
+                      </div>
                       <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          Snooze duration:
+                        </span>
                         <Input
-                          type="time"
-                          value={editTime}
-                          onChange={(e) => setEditTime(e.target.value)}
-                          className="w-32"
+                          type="number"
+                          min="1"
+                          max="60"
+                          value={alarm.snoozeDuration}
+                          onChange={(e) => updateSnoozeDuration(alarm.id, parseInt(e.target.value))}
+                          className="w-20"
                         />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => saveEdit(alarm.id)}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
+                        <span className="text-sm text-muted-foreground">minutes</span>
                       </div>
-                    ) : (
-                      <div className="text-2xl font-mono">
-                        {formatDisplayTime(alarm.time)}
-                        {alarm.isSnoozing && (
-                          <span className="text-sm ml-2 text-muted-foreground">
-                            Snoozing until {formatDisplayTime(alarm.snoozeEndTime!)}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex gap-1">
-                      {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                        <Button
-                          key={day}
-                          variant={
-                            alarm.days.includes(day) ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => toggleDay(alarm.id, day)}
-                        >
-                          {getDayLabel(day)}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Snooze duration:
-                      </span>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={alarm.snoozeDuration}
-                        onChange={(e) => updateSnoozeDuration(alarm.id, parseInt(e.target.value))}
-                        className="w-20"
-                      />
-                      <span className="text-sm text-muted-foreground">minutes</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
