@@ -60,7 +60,6 @@ export function Alarm() {
         ) {
           playAlarm();
           setActiveAlarmId(alarm.id);
-          // Reset snoozing state
           setAlarms(alarms.map(a => 
             a.id === alarm.id 
               ? { ...a, isSnoozing: false, snoozeEndTime: undefined }
@@ -82,7 +81,7 @@ export function Alarm() {
       snoozeDuration: 9,
       isSnoozing: false
     };
-    setAlarms([...alarms, newAlarm]);
+    setAlarms(prev => [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
     setNewLabel("");
   };
 
@@ -127,10 +126,10 @@ export function Alarm() {
   };
 
   const saveEdit = (id: string) => {
-    setAlarms(
-      alarms.map((alarm) =>
+    setAlarms(prev => 
+      prev.map((alarm) =>
         alarm.id === id ? { ...alarm, time: editTime, label: editLabel } : alarm
-      )
+      ).sort((a, b) => a.time.localeCompare(b.time))
     );
     setEditingId(null);
   };
@@ -229,7 +228,7 @@ export function Alarm() {
             </Button>
           </div>
           <Input
-            placeholder="Alarm label (optional)"
+            placeholder="Label"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             className="text-lg h-12"
@@ -296,7 +295,7 @@ export function Alarm() {
                             </Button>
                           </div>
                           <Input
-                            placeholder="Alarm label"
+                            placeholder="Label"
                             value={editLabel}
                             onChange={(e) => setEditLabel(e.target.value)}
                             className="text-lg h-12"
