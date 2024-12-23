@@ -305,36 +305,74 @@ export const soundEffects: SoundEffect[] = [
 ];
 
 let audioContext: AudioContext | null = null;
+let audioInitialized = false;
+
+const initializeAudioContext = async () => {
+  if (!audioContext) {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      audioContext = new AudioContext();
+      console.log('Audio context created:', audioContext.state);
+
+      if (audioContext.state === 'suspended') {
+        console.log('Attempting to resume audio context...');
+        await audioContext.resume();
+        console.log('Audio context resumed:', audioContext.state);
+      }
+
+      audioInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize audio context:', error);
+      throw error;
+    }
+  }
+  return audioContext;
+};
 
 export const playSoundEffect = async (effectName: string) => {
   try {
-    // Initialize audio context on first user interaction
-    if (!audioContext) {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContext = new AudioContext();
+    console.log('Playing sound effect:', effectName);
+    const ctx = await initializeAudioContext();
 
-      // Resume audio context if it's suspended (common on mobile)
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
+    // Double-check context state and resume if needed
+    if (ctx.state === 'suspended') {
+      console.log('Audio context suspended, attempting to resume...');
+      await ctx.resume();
+      console.log('Audio context state after resume:', ctx.state);
     }
 
     const effect = soundEffects.find(e => e.name === effectName);
     if (effect) {
-      // For mobile browsers, we need to resume the context within the user gesture
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-      effect.generate(audioContext, 2);
+      effect.generate(ctx, 2);
+      console.log('Sound effect generated successfully');
+    } else {
+      console.warn('Sound effect not found:', effectName);
     }
   } catch (error) {
     console.error('Error playing sound effect:', error);
+    throw error;
   }
 };
 
-// Cleanup function to handle page visibility changes
+// Update touch handlers in components to use async/await
+document.addEventListener('touchstart', async () => {
+  try {
+    if (!audioInitialized) {
+      console.log('Initializing audio on first touch...');
+      await initializeAudioContext();
+    }
+  } catch (error) {
+    console.error('Error initializing audio on touch:', error);
+  }
+});
+
+// Handle visibility changes
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && audioContext) {
+    console.log('Page hidden, suspending audio context');
     audioContext.suspend();
+  } else if (!document.hidden && audioContext?.state === 'suspended') {
+    console.log('Page visible, attempting to resume audio context');
+    audioContext.resume();
   }
 });

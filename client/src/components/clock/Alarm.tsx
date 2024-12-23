@@ -158,18 +158,22 @@ export function Alarm() {
     setActiveAlarmId(null);
   };
 
-  const dismissAlarm = (id: string) => {
-    setAlarms(alarms.map((alarm) =>
-      alarm.id === id
-        ? {
-            ...alarm,
-            enabled: false,
-            isSnoozing: false,
-            snoozeEndTime: undefined,
-          }
-        : alarm
-    ));
-    setActiveAlarmId(null);
+  const dismissAlarm = async (id: string) => {
+    try {
+      setAlarms(alarms.map((alarm) =>
+        alarm.id === id
+          ? {
+              ...alarm,
+              enabled: false,
+              isSnoozing: false,
+              snoozeEndTime: undefined,
+            }
+          : alarm
+      ));
+      setActiveAlarmId(null);
+    } catch (error) {
+      console.error('Error dismissing alarm:', error);
+    }
   };
 
   const updateSnoozeDuration = (id: string, duration: number) => {
@@ -202,13 +206,23 @@ export function Alarm() {
     setAlarms([]);
   };
 
-  const previewSound = (soundName: string) => {
-    playAlarm(soundName);
+  const handleTouchPreview = async (event: React.TouchEvent, soundName: string) => {
+    event.preventDefault();
+    try {
+      console.log('Preview sound on touch:', soundName);
+      await playAlarm(soundName);
+    } catch (error) {
+      console.error('Error previewing sound on touch:', error);
+    }
   };
 
-  const handleTouchPreview = async (event: React.TouchEvent, soundName: string) => {
-    event.preventDefault(); 
-    await playAlarm(soundName);
+  const previewSound = async (soundName: string) => {
+    try {
+      console.log('Previewing sound:', soundName);
+      await playAlarm(soundName);
+    } catch (error) {
+      console.error('Error previewing sound:', error);
+    }
   };
 
   return (
