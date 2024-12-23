@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Check } from "lucide-react";
 import { playAlarm } from "@/lib/audio";
+import dayjs from "dayjs";
 
 interface Alarm {
   id: string;
@@ -19,7 +20,9 @@ export function Alarm() {
     const saved = localStorage.getItem("alarms");
     return saved ? JSON.parse(saved) : [];
   });
-  const [newTime, setNewTime] = useState("07:00");
+  const [newTime, setNewTime] = useState(() => {
+    return dayjs().format("HH:mm"); // Keep 24h format for input
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState("");
 
@@ -51,11 +54,12 @@ export function Alarm() {
   }, [alarms]);
 
   const addAlarm = () => {
+    const currentDay = new Date().getDay();
     const newAlarm: Alarm = {
       id: Math.random().toString(36).substr(2, 9),
       time: newTime,
       enabled: true,
-      days: [0, 1, 2, 3, 4, 5, 6],
+      days: [currentDay], // Only enable for current day
     };
     setAlarms([...alarms, newAlarm]);
   };
@@ -104,6 +108,10 @@ export function Alarm() {
     return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day];
   };
 
+  const formatDisplayTime = (time: string) => {
+    return dayjs(`2000-01-01 ${time}`).format("h:mm A");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
@@ -141,7 +149,9 @@ export function Alarm() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-2xl font-mono">{alarm.time}</div>
+                      <div className="text-2xl font-mono">
+                        {formatDisplayTime(alarm.time)}
+                      </div>
                     )}
                     <div className="flex gap-1">
                       {[0, 1, 2, 3, 4, 5, 6].map((day) => (
